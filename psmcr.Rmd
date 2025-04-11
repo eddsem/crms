@@ -1,0 +1,47 @@
+---
+title: "psmcr2"
+output: html_document
+date: "2025-04-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{bash}
+#!/bin/bash
+#SBATCH --job-name=psmcr
+#SBATCH --output=psmcr.out
+#SBATCH --error=psmcr.err
+#SBATCH --time=0-06:00:00
+#SBATCH --mail-user=edds.em@northeastern.edu
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --mail-type=ALL
+#SBATCH --mem=40G
+#SBATCH --cpus-per-task=8
+
+cd /home/edds.em/crms/psmc
+VCF_File="/courses/EEMB5538.202530/data/Zm_TomBod_MAF01MM85INDM30_AllChr.recode.vcf.gz"
+REF_GENOME="/courses/EEMB5538.202530/data/Zmarina_668_v2.0.fa"
+OURPUT_DNABIN="output_dnabin.rds"
+R_SCRIPT="run_vcf2dnabin.R"
+
+#Write R Script
+cat > $R_SCRIPT <<EOF
+library(psmcr)
+
+dnabin_obj <- VCF2DNAbin("$VCF_FILE",
+                         refgenome="$REF_GENOME", individual = 37)
+
+#Save
+saveRDS(dnabin_obj, file = "OUTPUT_DNABIN")
+psmcr_result <- psmcr(dnabin_obj, niters = 5, B=30, mc.cores = 8)
+
+saveRDS(psmcr_result, file="psmcr.rds")
+EOF
+
+#Run the R Script
+Rscript $R_SCRIPT
+```
+
